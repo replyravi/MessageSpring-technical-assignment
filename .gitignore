@@ -24,6 +24,14 @@ backend/tsconfig.build.tsbuildinfo
 frontend/.next/
 frontend/out/
 
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+frontend/playwright/.cache/
+
+# Demo recording — shared with reviewers directly, kept out of the repo
+docs/**/*.mp4
+
 # Prisma generated local artifacts (keep migrations)
 backend/prisma/migrations/dev.db*
 
