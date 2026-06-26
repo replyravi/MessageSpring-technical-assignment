@@ -147,7 +147,8 @@ minutes of inactivity." That maps cleanly onto a **server-side session store**:
 
 | Threat | Mitigation |
 | --- | --- |
-| Brute-force login | Per-(email+IP) counter; 5 failures → 5-minute lockout. Plus a global `@nestjs/throttler` rate limit (60 req / 15s / IP). |
+| Brute-force login | Per-(email+IP) counter; 5 failures → 5-minute lockout. On top of that a global `@nestjs/throttler` limit (200 req / 15s / IP) and a stricter per-login throttle (10 / min / IP). |
+| Spam / bot sign-ins | A hidden honeypot field (`website`) on the login form. Real users never see it; bots that auto-fill every input get the same generic rejection, and the attempt counts toward the lockout. |
 | User enumeration via timing | Even when the email is unknown we run an `argon2.verify` against a dummy hash so response time is roughly constant. |
 | Password storage | `argon2id` (memory-hard). |
 | Cookie theft | `HttpOnly`, `SameSite=Lax`, `Secure` flag toggled by `COOKIE_SECURE` (on in prod). Token is high-entropy and revocable. |
@@ -226,6 +227,30 @@ npm test            # Jest unit tests (e.g. ProductsService pagination math)
 The unit test in `products.service.spec.ts` locks in the cursor-pagination
 contract (`limit + 1` fetch, correct `nextCursor`, `hasMore` flag).
 
+### End-to-end (Playwright)
+
+`frontend/e2e` drives the real browser against a running stack:
+
+```bash
+# with the API (:4000) and web app (:3000) up and the DB seeded
+cd frontend
+npx playwright install chromium   # first run only
+npm run e2e -- e2e/smoke.spec.ts
+```
+
+`smoke.spec.ts` walks the whole journey — login, brute-force lockout, infinite
+scroll, the page-size control, category filter, session persistence across a
+full reload, and logout. `timeout.spec.ts` exercises the inactivity timeout;
+point it at an API started with a short idle window so it doesn't take 30
+minutes:
+
+```bash
+# terminal 1 — API with a 10s idle window instead of 30 min
+cd backend && SESSION_IDLE_MS=10000 npm run start:prod
+# terminal 2 — just the timeout spec
+cd frontend && npm run e2e -- e2e/timeout.spec.ts
+```
+
 ---
 
 ## CI/CD
@@ -235,13 +260,16 @@ contract (`limit + 1` fetch, correct `nextCursor`, `hasMore` flag).
 1. **Backend job** — spins up a Postgres service container, runs
    `prisma generate`, lint, unit tests, and `nest build`.
 2. **Frontend job** — `npm ci`, lint, `next build`.
-3. **Docker job** — once the above pass, builds both Docker images to catch
+3. **E2E job** — spins up Postgres, builds and starts the API and web app,
+   then runs the Playwright `smoke.spec.ts` against the live stack. The
+   Playwright report is uploaded as a build artifact.
+4. **Docker job** — once the above pass, builds both Docker images to catch
    Dockerfile / layer drift.
 
-This covers the "basic CI/CD pipeline" requirement: lint + test + build on
-every change, plus container build validation. To extend to a real deploy,
-add a fourth job that pushes the image to a registry and triggers the
-platform deploy (ECS / Fly / Render / k8s) on `main` builds.
+This covers the "basic CI/CD pipeline" requirement: lint + unit tests +
+end-to-end tests + build on every change, plus container build validation. To
+extend to a real deploy, add a job that pushes the image to a registry and
+triggers the platform deploy (ECS / Fly / Render / k8s) on `main` builds.
 
 ---
 
@@ -256,6 +284,7 @@ With more than the suggested 3 hours, in rough priority order:
   global one), backed by Redis so it works across multiple API instances.
 - **Image optimization.** Replace picsum with real `next/image`-served assets
   and AVIF/WebP variants.
-- **E2E tests** with Playwright covering login → scroll → idle timeout.
+- **Product detail pages, a cart, and catalog search** — the obvious next
+  slice of e-commerce functionality.
 - **Observability**: structured logs (pino), `/metrics` for Prometheus, and
   a Sentry DSN on the frontend.
