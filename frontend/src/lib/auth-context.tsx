@@ -16,7 +16,7 @@ type AuthState = {
   user: { id: number; email: string; fullName: string } | null;
   session: SessionInfo | null;
   ready: boolean; // has the initial /me finished?
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, website?: string) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -94,8 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await api.login(email, password);
+  const login = useCallback(async (email: string, password: string, website?: string) => {
+    const res = await api.login(email, password, website);
     setUser(res.user);
     setSession(res.session);
     idleMsRef.current = res.session.idleMs;

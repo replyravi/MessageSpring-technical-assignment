@@ -53,12 +53,13 @@ async function handle<T>(res: Response): Promise<T> {
 }
 
 export const api = {
-  async login(email: string, password: string): Promise<{ user: { id: number; email: string; fullName: string }; session: SessionInfo }> {
+  async login(email: string, password: string, website = ''): Promise<{ user: { id: number; email: string; fullName: string }; session: SessionInfo }> {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      // `website` is the honeypot value — empty for real users.
+      body: JSON.stringify({ email, password, website }),
     });
     return handle(res);
   },

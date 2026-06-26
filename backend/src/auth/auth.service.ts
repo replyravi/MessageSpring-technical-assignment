@@ -36,6 +36,15 @@ export class AuthService {
     const ip = this.clientIp(req);
     const key = `${email}|${ip}`;
 
+    // Honeypot: the `website` field is invisible to real users, so anything
+    // that fills it in is almost certainly a bot. Treat it like a bad
+    // password — count it against the attempt limit and give the generic
+    // error so we don't reveal that we spotted the trap.
+    if (dto.website && dto.website.trim().length > 0) {
+      this.recordFailure(key);
+      throw new UnauthorizedException('Invalid email or password.');
+    }
+
     if (this.isLocked(key)) {
       // Vague message on purpose — don't leak whether the email exists.
       throw new UnauthorizedException(
