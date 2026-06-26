@@ -1,0 +1,53 @@
+version: "3.9"
+
+# One-command local stack: Postgres + NestJS API + Next.js web.
+# Usage:
+#   docker compose up --build
+# Then open http://localhost:3000 and sign in with the seeded account.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ecom
+      POSTGRES_PASSWORD: ecom
+      POSTGRES_DB: ecom
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecom"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://ecom:ecom@db:5432/ecom?schema=public"
+      PORT: "4000"
+      CORS_ORIGIN: "http://localhost:3000"
+      COOKIE_SECURE: "false"
+      SESSION_IDLE_MS: "1800000"
+      SESSION_TTL_MS: "28800000"
+      SEED_USER_PASSWORD: "Password123!"
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_URL: "http://api:4000"
+    depends_on:
+      - api
+    environment:
+      BACKEND_URL: "http://api:4000"
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

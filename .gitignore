@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Env / secrets
+.env
+.env*.local
+*.local
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+backend/dist/
+backend/coverage/
+backend/tsconfig.build.tsbuildinfo
+frontend/.next/
+frontend/out/
+
+# Prisma generated local artifacts (keep migrations)
+backend/prisma/migrations/dev.db*
+
+# Logs
+*.log
+
+# Source assignment brief — not part of the submission
+Senior Level Take-Home Assignment.pdf

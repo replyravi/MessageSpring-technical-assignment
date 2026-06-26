@@ -1,0 +1,64 @@
+// Prisma schema for e-commerce catalog.
+// Sessions are persisted server-side so we can enforce the 30-minute
+// inactivity timeout regardless of what the client does.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  fullName  String   @default("")
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions  Session[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  token        String   @unique
+  userId       Int
+  userAgent    String?
+  ip           String?
+  // Wall-clock of the last request made with this session.
+  lastSeenAt   DateTime @default(now())
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  revokedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  name        String
+  description String
+  priceCents  Int
+  currency    String   @default("USD")
+  category    String
+  imageUrl    String
+  rating      Float    @default(0)
+  stock       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([priceCents])
+}
