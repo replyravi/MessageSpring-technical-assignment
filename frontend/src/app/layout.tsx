@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/auth-context';
 export const metadata: Metadata = {
   title: 'Shopwave — Catalog',
   description: 'E-commerce product catalog demo',
+  icons: { icon: '/favicon.svg' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
