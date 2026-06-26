@@ -14,14 +14,15 @@ the code on every push.
 1. [Repo layout](#repo-layout)
 2. [Running locally](#running-locally)
 3. [Demo account](#demo-account)
-4. [Architecture notes](#architecture-notes)
+4. [Screenshots](#screenshots)
+5. [Architecture notes](#architecture-notes)
    - [Sessions & security](#sessions--security)
    - [Infinite scroll & pagination](#infinite-scroll--pagination)
    - [Frontend state](#frontend-state)
-5. [Configuration](#configuration)
-6. [Testing](#testing)
-7. [CI/CD](#cicd)
-8. [What I would add next](#what-i-would-add-next)
+6. [Configuration](#configuration)
+7. [Testing](#testing)
+8. [CI/CD](#cicd)
+9. [What I would add next](#what-i-would-add-next)
 
 ---
 
@@ -122,6 +123,22 @@ Password: Password123!
 
 Created by `prisma/seed.ts`. Override the password with
 `SEED_USER_PASSWORD=... npm run prisma:seed`.
+
+---
+
+## Screenshots
+
+The full click-through — login, brute-force lockout, catalog, infinite scroll,
+page-size control, category filter, session persistence, inactivity timeout and
+logout — is captured in [`docs/walkthrough/`](docs/walkthrough). A couple of
+highlights:
+
+| Login | Catalog |
+| --- | --- |
+| ![Login screen](docs/walkthrough/01-login-screen.png) | ![Product catalog](docs/walkthrough/04-catalog.png) |
+
+These are produced by the Playwright suite under `frontend/e2e` (see
+[Testing](#testing)), so they stay in sync with the actual UI.
 
 ---
 
